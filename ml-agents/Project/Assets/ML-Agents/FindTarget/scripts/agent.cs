@@ -92,7 +92,7 @@ public class agent : Agent
         var rotateDir = Vector3.zero;
 
         var forward = act[0];
-        //var rote = act[1];
+        var rotate = act[1];
         switch (forward)
         {
             case 1:
@@ -101,14 +101,16 @@ public class agent : Agent
             case 2:
                 dirToGo = transform.forward * -1f;
                 break;
-            case 3:
+        }
+        switch (rotate)
+        {
+            case 1:
                 rotateDir = transform.up * 1f;
                 break;
-            case 4:
+            case 2:
                 rotateDir = transform.up * -1f;
                 break;
         }
-        //c
         transform.Rotate(rotateDir, Time.deltaTime * 150f);
         Agent.AddForce(dirToGo * 1, ForceMode.VelocityChange);
 
