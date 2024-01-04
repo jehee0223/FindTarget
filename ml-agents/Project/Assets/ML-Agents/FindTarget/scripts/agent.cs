@@ -108,6 +108,7 @@ public class agent : Agent
                 rotateDir = transform.up * -1f;
                 break;
         }
+        //a
         transform.Rotate(rotateDir, Time.deltaTime * 150f);
         Agent.AddForce(dirToGo * 1, ForceMode.VelocityChange);
 
