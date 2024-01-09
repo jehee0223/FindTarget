@@ -7,16 +7,18 @@ using Unity.MLAgents.Sensors;
 
 public class agent : Agent
 {
-    Rigidbody Agent;
-    public GameObject Target;
-    public float agentRunSpeed;
+    public Rigidbody Agent;            //size=1*1
+    public GameObject Target;   //size=0.5*0.5
+    public GameObject Obstacle; //size=1*1
+    public float agentRunSpeed; //나중에 센서에서 타겟이 멀리 감지되면 빠르게 설정해보기
     public float agentRotationSpeed;
 
     public GameObject rangeObject;
     BoxCollider rangeCollider;
-    //이제희 바보
-    int count=0;
-    // 랜덤 위치 선정
+    int count = 0;  // step수 확인용 count
+    int clash = 0;  // object 생성할 때 안겹치게 하기 위한 변수
+
+    // 랜덤 위치 선정(현재 사용 x)
     public Vector3 Return_RandomPosition()
     {
         Vector3 originPosition = rangeObject.transform.position;
@@ -38,11 +40,9 @@ public class agent : Agent
         rangeCollider = GetComponent<BoxCollider>();
     }
 
-    // ray perception sensor 3d를 사용하고있으면 사용 불가능
+    // ray perception sensor 3d를 사용하고있으면 사용 불가능(가능할지도?)
     //public override void CollectObservations(VectorSensor sensor)
     //{
-    //
-
     //    // 타겟의 위치 정보 수집
     //    if (Target != null)
     //    {
@@ -55,12 +55,28 @@ public class agent : Agent
     //        Debug.Log("Is sensor null: " + sensor == null);
     //    }
     //}
+    
+
 
     public override void OnEpisodeBegin()
     {
-        Agent.transform.localPosition = new Vector3(Random.Range(-5, 5), 0.5f, Random.Range(-5, 5));
-        Target.transform.localPosition = new Vector3(Random.Range(-5, 5), 0.5f, Random.Range(-5, 5));
+        Debug.Log("epi start");
+        while (clash==0) {
+            Agent.transform.localPosition = new Vector3(Random.Range(-5, 5), 0.5f, Random.Range(-5, 5));
+            Target.transform.localPosition = new Vector3(Random.Range(-5, 5), 0.25f, Random.Range(-5, 5));
+            Obstacle.transform.localPosition = new Vector3(Random.Range(-5, 5), 0.5f, Random.Range(-5, 5));
+
+            float distanceAT = Vector3.Distance(Agent.position, Target.transform.position);
+            float distanceTO = Vector3.Distance(Target.transform.position, Obstacle.transform.position);
+            float distanceOA = Vector3.Distance(Obstacle.transform.position, Agent.position);
+
+            if (distanceAT <= 2.5 || distanceTO <= 2.5 || distanceOA <= 2.5) { clash = 0; }
+            else { clash = 1; }
+        }
         SetReward(0);
+        Debug.Log("set reward");
+        clash = 0;
+
     }
 
     public override void Heuristic(in ActionBuffers actionsOut)
@@ -132,7 +148,7 @@ public class agent : Agent
         Vector3 center = transform.position;
         float halfWidth = transform.localScale.x / 2f;
         float halfHeight = transform.localScale.y / 2f;
-
+        Debug.Log("step : " + count);
         //Vector3 endPoint = center + new Vector3(halfWidth, halfHeight, 0f);
         //Debug.Log("도형의 끝점 좌표: " + endPoint);
     }
@@ -151,9 +167,15 @@ public class agent : Agent
             AddReward(-1f);
             Debug.Log("wall col");
         }
+        else if (collision.gameObject.CompareTag("obstacle"))
+        {
+            AddReward(-1f);
+            Debug.Log("obstacle col");
+        }
     }
 
-    public void RayCastInfo(RayPerceptionSensorComponent3D rayComponent)
+    //물체 감지 함수(현재 사용 x)
+    /*public void RayCastInfo(RayPerceptionSensorComponent3D rayComponent)
     {
         //rayComponent(파라미터)가 만들어내는 RayOutput을 rayOutputs변수에 저장
         var rayOutputs = RayPerceptionSensor
@@ -184,5 +206,5 @@ public class agent : Agent
                 }
             }
         }
-    }
+    }*/
 }
