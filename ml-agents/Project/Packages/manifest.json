@@ -8,6 +8,7 @@
     "com.unity.ml-agents": "file:../../com.unity.ml-agents",
     "com.unity.ml-agents.extensions": "file:../../com.unity.ml-agents.extensions",
     "com.unity.nuget.newtonsoft-json": "3.2.1",
+    "com.unity.probuilder": "5.1.1",
     "com.unity.recorder": "4.0.1",
     "com.unity.test-framework": "1.1.33",
     "com.unity.textmeshpro": "3.0.6",
