@@ -6,6 +6,6 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/ML-Agents/FindTarget/scenes/FindTarget.unity
-    guid: 973b516b31911224fb1ee83bd7a29c1b
+    path: Assets/ML-Agents/FindTarget/drone model/dronescene.unity
+    guid: d12fe498def621b4fb85daa388f03a1c
   m_configObjects: {}

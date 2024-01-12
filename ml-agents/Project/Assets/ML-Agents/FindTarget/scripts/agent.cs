@@ -14,30 +14,30 @@ public class agent : Agent
     public float agentRotationSpeed;
 
     public GameObject rangeObject;
-    BoxCollider rangeCollider;
+    //BoxCollider rangeCollider;
     int count = 0;  // step수 확인용 count
     int clash = 0;  // object 생성할 때 안겹치게 하기 위한 변수
 
     // 랜덤 위치 선정(현재 사용 x)
-    public Vector3 Return_RandomPosition()
-    {
-        Vector3 originPosition = rangeObject.transform.position;
-        float range_X = rangeCollider.bounds.size.x;
-        float range_Z = rangeCollider.bounds.size.z;
+    //public Vector3 Return_RandomPosition()
+    //{
+    //    Vector3 originPosition = rangeObject.transform.position;
+    //    float range_X = rangeCollider.bounds.size.x;
+    //    float range_Z = rangeCollider.bounds.size.z;
 
-        range_X = Random.Range((range_X / 2) * -1, range_X / 2);
-        range_Z = Random.Range((range_Z / 2) * -1, range_Z / 2);
-        Vector3 RandomPostion = new Vector3(range_X, 0f, range_Z);
+    //    range_X = Random.Range((range_X / 2) * -1, range_X / 2);
+    //    range_Z = Random.Range((range_Z / 2) * -1, range_Z / 2);
+    //    Vector3 RandomPostion = new Vector3(range_X, 0f, range_Z);
 
-        Vector3 respawnPosition = originPosition + RandomPostion;
-        return respawnPosition;
-    }
+    //    Vector3 respawnPosition = originPosition + RandomPostion;
+    //    return respawnPosition;
+    //}
 
     // 초기화
     public override void Initialize()
     {
         Agent=GetComponent<Rigidbody>();
-        rangeCollider = GetComponent<BoxCollider>();
+        //rangeCollider = GetComponent<BoxCollider>();
     }
 
     // ray perception sensor 3d를 사용하고있으면 사용 불가능(가능할지도?)
