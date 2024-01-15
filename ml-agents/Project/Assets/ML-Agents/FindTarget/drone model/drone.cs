@@ -49,6 +49,7 @@ public class DroneAgent : Agent
 
     public override void CollectObservations(VectorSensor sensor)
     {
+        //Debug.Log("CollectObservations");
         // Target and Agent positions
         sensor.AddObservation(Target.localPosition);
         sensor.AddObservation(rb.transform.localPosition);
@@ -60,10 +61,19 @@ public class DroneAgent : Agent
         sensor.AddObservation(rb.velocity.z);
     }
 
-    private float power = 20;
+    private float power = 10;
 
     public override void OnActionReceived(ActionBuffers actionBuffers)
     {
+        Vector3 currentRotation = rb.rotation.eulerAngles;
+        
+        // 각 축의 회전 각도 출력
+        float pitch = currentRotation.x;
+        float yaw = currentRotation.y;
+        float roll = currentRotation.z;
+        // 회전 각도 출력 예시
+        Debug.Log("Pitch: " + pitch + ", Yaw: " + yaw + ", Roll: " + roll);
+
         var continuousActions = actionBuffers.ContinuousActions;
         if (continuousActions.Length >= 4)
         {
@@ -75,16 +85,20 @@ public class DroneAgent : Agent
                 switch (i)
                 {
                     case 0:
-                        Rotor_fr.AddRelativeForce(Vector3.up * (action + 0.5f) * power);
+                        Rotor_fr.AddRelativeForce(Vector3.up * (action + 1f) * power);
+                        //Debug.Log("fr action: " + action + " fr force: " + Vector3.up * (action + 1f) * power);
                         break;
                     case 1:
-                        Rotor_fl.AddRelativeForce(Vector3.up * (action + 0.5f) * power);
+                        Rotor_fl.AddRelativeForce(Vector3.up * (action + 1f) * power);
+                        //Debug.Log("fl action: " + action + " fl force: " + Vector3.up * (action + 1f) * power);
                         break;
                     case 2:
-                        Rotor_br.AddRelativeForce(Vector3.up * (action + 0.5f) * power);
+                        Rotor_br.AddRelativeForce(Vector3.up * (action + 1f) * power);
+                        //Debug.Log("br action: " + action + " br force: " + Vector3.up * (action + 1f) * power);
                         break;
                     case 3:
-                        Rotor_bl.AddRelativeForce(Vector3.up * (action + 0.5f) * power);
+                        Rotor_bl.AddRelativeForce(Vector3.up * (action + 1f) * power);
+                        //Debug.Log("bl action: " + action + " bl force: " + Vector3.up * (action + 1f) * power);
                         break;
                         // Add more cases if needed
                 }
@@ -92,34 +106,15 @@ public class DroneAgent : Agent
         }
         // Actions, size = 4
         // Rewards
+
         step++;
         SetReward();
     }
 
-    
+
     public void SetReward()
     {
         /*-----------------------------------Target 찾아가기-------------------------------*/
-        //float distanceToTarget = Vector3.Distance(rb.transform.localPosition, Target.localPosition);
-
-        //Debug.Log("distanceToTarget : "+distanceToTarget);
-
-        //// 거리가 먼 만큼 음수보상
-        //AddReward(-(distanceToTarget / 10));
-        //reward -= distanceToTarget / 10;
-
-        //// 몸체의 기울기 x,z축 15도 안넘기
-        //if (Mathf.Abs(rb.transform.localRotation.x) < 15 && Mathf.Abs(rb.transform.localRotation.z) < 15)
-        //{
-        //    AddReward(1f);
-        //    reward += 1;
-        //}
-        //else
-        //{
-        //    AddReward(-1f);
-        //    reward -= 1;
-        //}
-
         //if (rb.velocity.x < 7 || rb.velocity.y < 7 || rb.velocity.z < 7)
         //{
         //    AddReward(-1f);
@@ -146,23 +141,30 @@ public class DroneAgent : Agent
         // 일단 타겟보다 위에 떠있는것 (호버링) 을 먼저 할 수 있도록 해보기(240112)
         float distance = Mathf.Abs(7 - rb.transform.localPosition.y);
 
+        Vector3 currentRotation = rb.rotation.eulerAngles;
+
+        // 각 축의 회전 각도 출력
+        float pitch = currentRotation.x;
+        float yaw = currentRotation.y;
+        float roll = currentRotation.z;
+
+        //기본적인 거리에 비례한 보상(목표 y:7)
         AddReward(7-distance);
 
-
-        //if (Mathf.Abs(rb.transform.localRotation.x) > 15 || Mathf.Abs(rb.transform.localRotation.z) > 15)
-        //{
-        //    AddReward(-1f);
-        //}
-        //else
-        //{
-        //    AddReward(1f);
-        //}
-
-
-        if (step > 5000)
+        // 절대값 10도 이내면 +10
+        if ((pitch < 10 || pitch > 350) && (roll < 10 || roll > 350))
         {
-            AddReward(-10f);
-            Debug.Log("End reward : " + reward);
+            AddReward(10f);
+        }
+
+        // 90~270도만큼 회전하면 종료
+        if ((pitch > 90 && pitch < 270) || (roll > 90 && roll < 270))
+        {
+            SetReward(-100f);
+            EndEpisode();
+        }
+        else if (step > 5000)
+        {
             EndEpisode();
         }
     }
@@ -171,31 +173,27 @@ public class DroneAgent : Agent
         var discreteActionsOut = actionsOut.DiscreteActions;
         if (Input.GetKey(KeyCode.D))
         {
-            discreteActionsOut[0] = 1;
-            Rotor_fr.AddRelativeForce(Vector3.up * (discreteActionsOut[0] + 0.5f) * power);
+            Rotor_fr.AddRelativeForce(Vector3.up * 1 * 50);
+            
         }
         else if (Input.GetKey(KeyCode.W))
         {
-            discreteActionsOut[0] = 1;
-            Rotor_fl.AddRelativeForce(Vector3.up * (discreteActionsOut[0] + 0.5f) * power);
+            Rotor_fl.AddRelativeForce(Vector3.up * 1 * 50);
         }
         else if (Input.GetKey(KeyCode.A))
         {
-            discreteActionsOut[0] = 1;
-            Rotor_br.AddRelativeForce(Vector3.up * (discreteActionsOut[0] + 0.5f) * power);
+            Rotor_br.AddRelativeForce(Vector3.up * 1 * 50);
         }
         else if (Input.GetKey(KeyCode.S))
         {
-            discreteActionsOut[0] = 1;
-            Rotor_bl.AddRelativeForce(Vector3.up * (discreteActionsOut[0] + 0.5f) * power);
+            Rotor_bl.AddRelativeForce(Vector3.up * 1 * 50);
         }
         else if(Input.GetKey(KeyCode.Z))
         {
-            discreteActionsOut[0] = 1;
-            Rotor_fr.AddRelativeForce(Vector3.up * (discreteActionsOut[0] + 0.5f) * power);
-            Rotor_fl.AddRelativeForce(Vector3.up * (discreteActionsOut[0] + 0.5f) * power);
-            Rotor_br.AddRelativeForce(Vector3.up * (discreteActionsOut[0] + 0.5f) * power);
-            Rotor_bl.AddRelativeForce(Vector3.up * (discreteActionsOut[0] + 0.5f) * power);
+            Rotor_fr.AddRelativeForce(Vector3.up * 1 * power);
+            Rotor_fl.AddRelativeForce(Vector3.up * 1 * power);
+            Rotor_br.AddRelativeForce(Vector3.up * 1 * power);
+            Rotor_bl.AddRelativeForce(Vector3.up * 1 * power);
         }
     }
 
