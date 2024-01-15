@@ -154,7 +154,7 @@ public class DroneAgent : Agent
         // 절대값 10도 이내면 +10
         if ((pitch < 10 || pitch > 350) && (roll < 10 || roll > 350))
         {
-            AddReward(10f);
+            AddReward(1f);
         }
 
         // 90~270도만큼 회전하면 종료
