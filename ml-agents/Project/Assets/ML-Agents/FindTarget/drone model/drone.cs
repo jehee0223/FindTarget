@@ -41,7 +41,8 @@ public class DroneAgent : Agent
 
         // Move the target to a new spot
         rb.transform.localPosition = new Vector3(0, (float)0.4813456, 0);
-        Target.transform.localPosition=new Vector3(Random.Range(-5,5), 9, Random.Range(-5,5));
+        //Target.transform.localPosition=new Vector3(Random.Range(-5,5), 9, Random.Range(-5,5));
+        Target.transform.localPosition = new Vector3(3, 9, 3);
 
         reward = 0;
         SetReward(0f);
@@ -74,8 +75,6 @@ public class DroneAgent : Agent
         // 회전 각도 출력 예시
         //Debug.Log("Pitch: " + pitch + ", Yaw: " + yaw + ", Roll: " + roll);
 
-        Debug.Log("actionreceived");
-
         var continuousActions = actionBuffers.ContinuousActions;
         if (continuousActions.Length >= 4)
         {
@@ -88,19 +87,19 @@ public class DroneAgent : Agent
                 {
                     case 0:
                         Rotor_fr.AddRelativeForce(Vector3.up * (action + 1f) * power);
-                        Debug.Log("fr action: " + action + " fr force: " + Vector3.up * (action + 1f) * power);
+                        //Debug.Log("fr action: " + action + " fr force: " + Vector3.up * (action + 1f) * power);
                         break;
                     case 1:
                         Rotor_fl.AddRelativeForce(Vector3.up * (action + 1f) * power);
-                        Debug.Log("fl action: " + action + " fl force: " + Vector3.up * (action + 1f) * power);
+                        //Debug.Log("fl action: " + action + " fl force: " + Vector3.up * (action + 1f) * power);
                         break;
                     case 2:
                         Rotor_br.AddRelativeForce(Vector3.up * (action + 1f) * power);
-                        Debug.Log("br action: " + action + " br force: " + Vector3.up * (action + 1f) * power);
+                        //Debug.Log("br action: " + action + " br force: " + Vector3.up * (action + 1f) * power);
                         break;
                     case 3:
                         Rotor_bl.AddRelativeForce(Vector3.up * (action + 1f) * power);
-                        Debug.Log("bl action: " + action + " bl force: " + Vector3.up * (action + 1f) * power);
+                        //Debug.Log("bl action: " + action + " bl force: " + Vector3.up * (action + 1f) * power);
                         break;
                         // Add more cases if needed
                 }
@@ -117,32 +116,8 @@ public class DroneAgent : Agent
     public void SetReward()
     {
         /*-----------------------------------Target 찾아가기-------------------------------*/
-        //if (rb.velocity.x < 7 || rb.velocity.y < 7 || rb.velocity.z < 7)
-        //{
-        //    AddReward(-1f);
-        //}
-
-        //// 너무 멀어지면 음수보상 & 종료
-        ////if (distanceToTarget > 20.0f)
-        ////{
-        ////    AddReward(-10f);
-        ////    reward -= 10;
-        ////    Debug.Log("End reward : " + reward);
-        ////    EndEpisode();
-        ////}
-
-        //// 너무 오래걸리면 종료
-        //if (step > 1000)
-        //{
-        //    AddReward(-10);
-        //    Debug.Log("End reward : " + reward);
-        //    EndEpisode();
-        //}
-
-        /*-------------------------------------------------------------------------------------------------*/
-        // 일단 타겟보다 위에 떠있는것 (호버링) 을 먼저 할 수 있도록 해보기(240112)
-        float distance = Mathf.Abs(7 - rb.transform.localPosition.y);
-
+        float dis = Vector3.Distance(Target.transform.localPosition, rb.transform.localPosition);
+        Debug.Log("Dis: " + dis);
         Vector3 currentRotation = rb.rotation.eulerAngles;
 
         // 각 축의 회전 각도 출력
@@ -150,25 +125,82 @@ public class DroneAgent : Agent
         float yaw = currentRotation.y;
         float roll = currentRotation.z;
 
-        //기본적인 거리에 비례한 보상(목표 y:7)
-        AddReward(7-distance);
+        AddReward(-0.05f);
 
-        // 절대값 10도 이내면 +10
-        if ((pitch < 5 || pitch > 355) && (roll < 5 || roll > 355))
+        //기본적인 거리에 비례한 보상
+        //AddReward(10-dis);
+
+        // 절대값 10도 이내 양수 보상
+        if ((pitch < 10 || pitch > 350) && (roll < 10 || roll > 350))
         {
-            AddReward(10f);
+            if (dis > 30)
+            {
+                SetReward(-1f);
+                EndEpisode();
+            }
+            else
+            {
+                AddReward(0.1f * (10 - dis));
+            }
         }
 
-        // 90~270도만큼 회전하면 종료
+        // 90~270도만큼 회전하면 음수 보상&종료
         if ((pitch > 90 && pitch < 270) || (roll > 90 && roll < 270))
         {
-            SetReward(-100f);
+            SetReward(-1f);
+            EndEpisode();
+        }
+        else if (Mathf.Abs(rb.transform.localPosition.x) > 10 || Mathf.Abs(rb.transform.localPosition.z) > 10)
+        {
+            SetReward(-1f);
             EndEpisode();
         }
         else if (step > 5000)
         {
             EndEpisode();
         }
+
+        //if (rb.velocity.x < 7 || rb.velocity.y < 7 || rb.velocity.z < 7)
+        //{
+        //    AddReward(-1f);
+        //}
+
+
+        /*-------------------------------------------------------------------------------------------------*/
+        // 일단 타겟보다 위에 떠있는것 (호버링) 을 먼저 할 수 있도록 해보기(240112)
+        //float distance = Mathf.Abs(7 - rb.transform.localPosition.y);
+
+        //Vector3 currentRotation = rb.rotation.eulerAngles;
+
+        //// 각 축의 회전 각도 출력
+        //float pitch = currentRotation.x;
+        //float yaw = currentRotation.y;
+        //float roll = currentRotation.z;
+
+        //기본적인 거리에 비례한 보상(목표 y:7)
+        //AddReward(7-distance);
+
+        //// 절대값 10도 이내면 +10
+        //if ((pitch < 5 || pitch > 355) && (roll < 5 || roll > 355))
+        //{
+        //    AddReward(10f);
+        //}
+
+        //// 90~270도만큼 회전하면 종료
+        //if ((pitch > 90 && pitch < 270) || (roll > 90 && roll < 270))
+        //{
+        //    SetReward(-100f);
+        //    EndEpisode();
+        //}
+        //else if(Mathf.Abs(rb.transform.localPosition.x) > 10 || Mathf.Abs(rb.transform.localPosition.z) > 10)
+        //{
+        //    SetReward(-100f);
+        //    EndEpisode();
+        //}
+        //else if (step > 5000)
+        //{
+        //    EndEpisode();
+        //}
     }
     public override void Heuristic(in ActionBuffers actionsOut)
     {
@@ -176,7 +208,6 @@ public class DroneAgent : Agent
         if (Input.GetKey(KeyCode.D))
         {
             Rotor_fr.AddRelativeForce(Vector3.up * 1 * 50);
-            
         }
         else if (Input.GetKey(KeyCode.W))
         {
@@ -203,7 +234,7 @@ public class DroneAgent : Agent
     {
         if (collision.gameObject.CompareTag("target"))
         {
-            SetReward(10f);
+            AddReward(10f);
             Debug.Log("success");
             EndEpisode();
         }
