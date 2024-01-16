@@ -72,7 +72,9 @@ public class DroneAgent : Agent
         float yaw = currentRotation.y;
         float roll = currentRotation.z;
         // 회전 각도 출력 예시
-        Debug.Log("Pitch: " + pitch + ", Yaw: " + yaw + ", Roll: " + roll);
+        //Debug.Log("Pitch: " + pitch + ", Yaw: " + yaw + ", Roll: " + roll);
+
+        Debug.Log("actionreceived");
 
         var continuousActions = actionBuffers.ContinuousActions;
         if (continuousActions.Length >= 4)
@@ -86,19 +88,19 @@ public class DroneAgent : Agent
                 {
                     case 0:
                         Rotor_fr.AddRelativeForce(Vector3.up * (action + 1f) * power);
-                        //Debug.Log("fr action: " + action + " fr force: " + Vector3.up * (action + 1f) * power);
+                        Debug.Log("fr action: " + action + " fr force: " + Vector3.up * (action + 1f) * power);
                         break;
                     case 1:
                         Rotor_fl.AddRelativeForce(Vector3.up * (action + 1f) * power);
-                        //Debug.Log("fl action: " + action + " fl force: " + Vector3.up * (action + 1f) * power);
+                        Debug.Log("fl action: " + action + " fl force: " + Vector3.up * (action + 1f) * power);
                         break;
                     case 2:
                         Rotor_br.AddRelativeForce(Vector3.up * (action + 1f) * power);
-                        //Debug.Log("br action: " + action + " br force: " + Vector3.up * (action + 1f) * power);
+                        Debug.Log("br action: " + action + " br force: " + Vector3.up * (action + 1f) * power);
                         break;
                     case 3:
                         Rotor_bl.AddRelativeForce(Vector3.up * (action + 1f) * power);
-                        //Debug.Log("bl action: " + action + " bl force: " + Vector3.up * (action + 1f) * power);
+                        Debug.Log("bl action: " + action + " bl force: " + Vector3.up * (action + 1f) * power);
                         break;
                         // Add more cases if needed
                 }
@@ -152,9 +154,9 @@ public class DroneAgent : Agent
         AddReward(7-distance);
 
         // 절대값 10도 이내면 +10
-        if ((pitch < 10 || pitch > 350) && (roll < 10 || roll > 350))
+        if ((pitch < 5 || pitch > 355) && (roll < 5 || roll > 355))
         {
-            AddReward(1f);
+            AddReward(10f);
         }
 
         // 90~270도만큼 회전하면 종료
