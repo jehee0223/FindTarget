@@ -43,7 +43,7 @@ PlayerSettings:
   m_VirtualRealitySplashScreen: {fileID: 0}
   m_HolographicTrackingLossScreen: {fileID: 0}
   defaultScreenWidth: 1280
-  defaultScreenHeight: 960
+  defaultScreenHeight: 1024
   defaultScreenWidthWeb: 960
   defaultScreenHeightWeb: 600
   m_StereoRenderingPath: 0
@@ -157,7 +157,7 @@ PlayerSettings:
   androidMaxAspectRatio: 2.1
   applicationIdentifier:
     Android: com.Company.ProductName
-    Standalone: com.Unity-Technologies.UnityEnvironment
+    Standalone: com.Unity-Technologies.Dronemodel-nonmoter
   buildNumber:
     Bratwurst: 0
     Standalone: 0
