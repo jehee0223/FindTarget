@@ -42,8 +42,8 @@ public class DroneAgent : Agent
 
         // Move the target to a new spot
         rb.transform.localPosition = new Vector3(0, (float)0.4813456, 0);
-        //Target.transform.localPosition=new Vector3(Random.Range(-5,5), 9, Random.Range(-5,5));
-        Target.transform.localPosition = new Vector3(3, 9, 3);
+        Target.transform.localPosition=new Vector3(UnityEngine.Random.Range(-5,5), 9, UnityEngine.Random.Range(-5,5));
+        //Target.transform.localPosition = new Vector3(3, 9, 3);
 
         reward = 0;
         SetReward(0f);
@@ -148,7 +148,7 @@ public class DroneAgent : Agent
         double GP = Gaussian(New_pitch, 0, 10) * 25;
         double GR = Gaussian(New_roll, 0, 10) * 25;
         double GD = Gaussian(dis, 0, 8) * 25;
-        AddReward((float)(GP + GR + (2 * GD)));
+        AddReward((float)(GP + GR + (1.5 * GD)));
         Debug.Log("GP:" + GP);
         Debug.Log("GR:" + GR);
         Debug.Log("GD:" + GD);
@@ -168,6 +168,7 @@ public class DroneAgent : Agent
         }
         else if (step > 5000)
         {
+            AddReward(-1000f);
             EndEpisode();
         }
 
@@ -213,7 +214,7 @@ public class DroneAgent : Agent
     {
         if (collision.gameObject.CompareTag("target"))
         {
-            AddReward(100f);
+            AddReward(1000f);
             Debug.Log("success");
             EndEpisode();
         }
