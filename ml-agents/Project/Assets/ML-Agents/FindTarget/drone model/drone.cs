@@ -63,7 +63,7 @@ public class DroneAgent : Agent
         sensor.AddObservation(rb.velocity.z);
     }
 
-    private float power = 48;
+    private float power = 45;
 
     public override void OnActionReceived(ActionBuffers actionBuffers)
     {
@@ -75,6 +75,7 @@ public class DroneAgent : Agent
         float roll = currentRotation.z;
         // 회전 각도 출력 예시
         //Debug.Log("Pitch: " + pitch + ", Yaw: " + yaw + ", Roll: " + roll);
+
 
         var continuousActions = actionBuffers.ContinuousActions;
         if (continuousActions.Length >= 4)
@@ -147,7 +148,7 @@ public class DroneAgent : Agent
         double GP = Gaussian(New_pitch, 0, 10) * 25;
         double GR = Gaussian(New_roll, 0, 10) * 25;
         double GD = Gaussian(dis, 0, 8) * 25;
-        AddReward((float)(GP + GR + (1.5 * GD)));
+        AddReward((float)(GP + GR + (2 * GD)));
         Debug.Log("GP:" + GP);
         Debug.Log("GR:" + GR);
         Debug.Log("GD:" + GD);
@@ -157,7 +158,7 @@ public class DroneAgent : Agent
         // 90~270도만큼 회전하면 음수 보상&종료
         if ((pitch > 90 && pitch < 270) || (roll > 90 && roll < 270))
         {
-            SetReward(-100f);
+            SetReward(-1000f);
             EndEpisode();
         }
         else if (Mathf.Abs(rb.transform.localPosition.x) > 10 || Mathf.Abs(rb.transform.localPosition.z) > 10)

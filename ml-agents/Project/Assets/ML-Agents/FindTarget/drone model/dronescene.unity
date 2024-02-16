@@ -196,6 +196,11 @@ PrefabInstance:
       propertyPath: m_Name
       value: Drone (7)
       objectReference: {fileID: 0}
+    - target: {fileID: 8011574790572720414, guid: e3b8add2095e2f9499d48ad7b27d1ccd,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: 7365174775743364298, guid: e3b8add2095e2f9499d48ad7b27d1ccd, type: 3}
     - {fileID: 913241476081373946, guid: e3b8add2095e2f9499d48ad7b27d1ccd, type: 3}
@@ -345,6 +350,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Name
       value: Drone (3)
+      objectReference: {fileID: 0}
+    - target: {fileID: 8011574790572720414, guid: e3b8add2095e2f9499d48ad7b27d1ccd,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: 7365174775743364298, guid: e3b8add2095e2f9499d48ad7b27d1ccd, type: 3}
@@ -563,6 +573,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Name
       value: Drone (8)
+      objectReference: {fileID: 0}
+    - target: {fileID: 8011574790572720414, guid: e3b8add2095e2f9499d48ad7b27d1ccd,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: 7365174775743364298, guid: e3b8add2095e2f9499d48ad7b27d1ccd, type: 3}
@@ -808,6 +823,11 @@ PrefabInstance:
       propertyPath: m_Name
       value: Drone (4)
       objectReference: {fileID: 0}
+    - target: {fileID: 8011574790572720414, guid: e3b8add2095e2f9499d48ad7b27d1ccd,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: 7365174775743364298, guid: e3b8add2095e2f9499d48ad7b27d1ccd, type: 3}
     - {fileID: 913241476081373946, guid: e3b8add2095e2f9499d48ad7b27d1ccd, type: 3}
@@ -1050,6 +1070,11 @@ PrefabInstance:
       propertyPath: m_Name
       value: Drone (1)
       objectReference: {fileID: 0}
+    - target: {fileID: 8011574790572720414, guid: e3b8add2095e2f9499d48ad7b27d1ccd,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: 7365174775743364298, guid: e3b8add2095e2f9499d48ad7b27d1ccd, type: 3}
     - {fileID: 913241476081373946, guid: e3b8add2095e2f9499d48ad7b27d1ccd, type: 3}
@@ -1199,6 +1224,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Name
       value: Drone (6)
+      objectReference: {fileID: 0}
+    - target: {fileID: 8011574790572720414, guid: e3b8add2095e2f9499d48ad7b27d1ccd,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: 7365174775743364298, guid: e3b8add2095e2f9499d48ad7b27d1ccd, type: 3}
@@ -1350,6 +1380,11 @@ PrefabInstance:
       propertyPath: m_Name
       value: Drone (2)
       objectReference: {fileID: 0}
+    - target: {fileID: 8011574790572720414, guid: e3b8add2095e2f9499d48ad7b27d1ccd,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: 7365174775743364298, guid: e3b8add2095e2f9499d48ad7b27d1ccd, type: 3}
     - {fileID: 913241476081373946, guid: e3b8add2095e2f9499d48ad7b27d1ccd, type: 3}
@@ -1499,6 +1534,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Name
       value: Drone (5)
+      objectReference: {fileID: 0}
+    - target: {fileID: 8011574790572720414, guid: e3b8add2095e2f9499d48ad7b27d1ccd,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: 7365174775743364298, guid: e3b8add2095e2f9499d48ad7b27d1ccd, type: 3}
