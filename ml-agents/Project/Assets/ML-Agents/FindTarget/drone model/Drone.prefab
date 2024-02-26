@@ -135,6 +135,7 @@ MonoBehaviour:
   Rotor_br: {fileID: 7851137534853820541}
   Rotor_bl: {fileID: 5107050957780714627}
   Target: {fileID: 1484969827844311848}
+  episode: 0
 --- !u!1 &2364246878234567716
 GameObject:
   m_ObjectHideFlags: 0

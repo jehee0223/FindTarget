@@ -5,9 +5,14 @@ using Unity.MLAgents;
 using Unity.MLAgents.Sensors;
 using Unity.MLAgents.Actuators;
 using System;
+using System.IO;
+using static UnityEngine.UIElements.UxmlAttributeDescription;
+//using UnityEditor.PackageManager;
+//using UnityEditor.SearchService;
 
 public class DroneAgent11 : Agent
 {
+
     public int step = 0;
     public double reward = 0;
 
@@ -21,16 +26,27 @@ public class DroneAgent11 : Agent
     private Vector3 initPosition;
     private Quaternion initQuaternion;
 
+    //public double dis;
+    //public double pitch;
+    //public double roll;
+    //public double yaw;
+    //public double New_pitch;
+    //public double New_roll;
+    public int episode=0;
+
+    public Logger logger;
+
     // Start is called before the first frame update
     public override void Initialize()
     {
         rb = GetComponent<Rigidbody>();
+        logger = new Logger("training_data.csv");
     }
 
     public override void OnEpisodeBegin()
     {
         step = 0;
-        // If the Agent fell, zero its momentum
+
         rb.transform.localPosition = initPosition;
         rb.transform.localRotation = initQuaternion;
 
@@ -46,6 +62,7 @@ public class DroneAgent11 : Agent
         //Target.transform.localPosition = new Vector3(3, 9, 3);
 
         reward = 0;
+        episode += 1;
         SetReward(0f);
     }
 
@@ -112,6 +129,7 @@ public class DroneAgent11 : Agent
 
         step++;
         SetReward();
+        
     }
 
 
@@ -145,34 +163,39 @@ public class DroneAgent11 : Agent
         {
             New_roll = roll;
         }
-        double GP = (Gaussian(New_pitch, 0, 2) - 1)*2;
-        double GR = (Gaussian(New_roll, 0, 2) - 1)*2;
-        double GD = Gaussian(dis, 0, 8) * 100;
-        AddReward((float)(GP + GR + (2 * GD)));
-        Debug.Log("GP rotate:" + pitch);
+        double GP = Gaussian(New_pitch, 0, 10) * 25;
+        double GR = Gaussian(New_roll, 0, 10) * 25;
+        double GD = Gaussian(dis, 0, 8) * 25;
+        AddReward((float)(GP + GR + (1.5 * GD)));
         Debug.Log("GP:" + GP);
         Debug.Log("GR:" + GR);
         Debug.Log("GD:" + GD);
         Debug.Log("velocity:" + Rotor_bl.velocity);
-        AddReward(-1f);
+        AddReward(-3f);
 
         // 90~270도만큼 회전하면 음수 보상&종료
         if ((pitch > 90 && pitch < 270) || (roll > 90 && roll < 270))
         {
             SetReward(-1000f);
+            //logger.Log(episode, (float)New_pitch, (float)New_roll);
             EndEpisode();
         }
         else if (Mathf.Abs(rb.transform.localPosition.x) > 10 || Mathf.Abs(rb.transform.localPosition.z) > 10)
         {
             SetReward(-1000f);
+            //logger.Log(episode, (float)New_pitch, (float)New_roll);
             EndEpisode();
         }
         else if (step > 5000)
         {
             AddReward(-1000f);
+            //logger.Log(episode, (float)New_pitch, (float)New_roll);
             EndEpisode();
         }
-
+        var statsRecorder = Academy.Instance.StatsRecorder;
+        statsRecorder.Add("Distance", dis, StatAggregationMethod.Average);
+        statsRecorder.Add("Pitch", (float)New_pitch, StatAggregationMethod.Average);
+        statsRecorder.Add("Roll", (float)New_roll, StatAggregationMethod.Average);
     }
 
     static double Gaussian(double x, double mean, double standardDeviation)
@@ -218,6 +241,29 @@ public class DroneAgent11 : Agent
             AddReward(1000f);
             Debug.Log("success");
             EndEpisode();
+        }
+    }
+}
+
+public class Logger
+{
+    private string filePath;
+
+    public Logger(string filePath)
+    {
+        this.filePath = "C:/Users/leejehee/Desktop/Github/FindTarget/ml - agents/Project/Build/FindTarget/dronemodel";
+
+        using (var writer = new StreamWriter(filePath, append: true))
+        {
+            writer.WriteLine("Episode,Reward,AnotherMetric");
+        }
+    }
+
+    public void Log(int episode, float New_pitch, float New_roll)
+    {
+        using (var writer = new StreamWriter(filePath, append: true))
+        {
+            writer.WriteLine($"{episode},{New_pitch},{New_roll}");
         }
     }
 }
