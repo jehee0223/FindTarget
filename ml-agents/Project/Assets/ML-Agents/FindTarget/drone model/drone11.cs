@@ -6,7 +6,7 @@ using Unity.MLAgents.Sensors;
 using Unity.MLAgents.Actuators;
 using System;
 
-public class DroneAgent : Agent
+public class DroneAgent11 : Agent
 {
     public int step = 0;
     public double reward = 0;
@@ -145,15 +145,16 @@ public class DroneAgent : Agent
         {
             New_roll = roll;
         }
-        double GP = Gaussian(New_pitch, 0, 10) * 25;
-        double GR = Gaussian(New_roll, 0, 10) * 25;
-        double GD = Gaussian(dis, 0, 8) * 25;
-        AddReward((float)(GP + GR + (1.5 * GD)));
+        double GP = (Gaussian(New_pitch, 0, 2) - 1)*2;
+        double GR = (Gaussian(New_roll, 0, 2) - 1)*2;
+        double GD = Gaussian(dis, 0, 8) * 100;
+        AddReward((float)(GP + GR + (2 * GD)));
+        Debug.Log("GP rotate:" + pitch);
         Debug.Log("GP:" + GP);
         Debug.Log("GR:" + GR);
         Debug.Log("GD:" + GD);
         Debug.Log("velocity:" + Rotor_bl.velocity);
-        AddReward(-3f);
+        AddReward(-1f);
 
         // 90~270도만큼 회전하면 음수 보상&종료
         if ((pitch > 90 && pitch < 270) || (roll > 90 && roll < 270))
