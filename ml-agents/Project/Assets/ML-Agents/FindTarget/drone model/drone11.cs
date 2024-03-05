@@ -14,6 +14,7 @@ public class DroneAgent11 : Agent
 {
 
     public int step = 0;
+    public int total_step = 0;
     public double reward = 0;
 
     public Rigidbody rb;
@@ -26,21 +27,23 @@ public class DroneAgent11 : Agent
     private Vector3 initPosition;
     private Quaternion initQuaternion;
 
-    //public double dis;
+    public double dis;
     //public double pitch;
     //public double roll;
     //public double yaw;
-    //public double New_pitch;
-    //public double New_roll;
+    public double New_pitch;
+    public double New_roll;
     public int episode=0;
 
-    public Logger logger;
+    public Logger logger_epi;
+    public Logger logger_step;
 
     // Start is called before the first frame update
     public override void Initialize()
     {
         rb = GetComponent<Rigidbody>();
-        logger = new Logger("training_data.csv");
+        //logger_epi = new Logger("C:/Users/leejehee/Desktop/Github/FindTarget/ml-agents/Project/Build/FindTarget/dronemodel/training_data_epi.csv", "C:/Users/leejehee/Desktop/Github/FindTarget/ml-agents/Project/Build/FindTarget/dronemodel/training_data_step.csv");
+        //logger_step = new Logger("C:/Users/leejehee/Desktop/Github/FindTarget/ml-agents/Project/Build/FindTarget/dronemodel/training_data_epi.csv", "C:/Users/leejehee/Desktop/Github/FindTarget/ml-agents/Project/Build/FindTarget/dronemodel/training_data_step.csv");
     }
 
     public override void OnEpisodeBegin()
@@ -80,7 +83,7 @@ public class DroneAgent11 : Agent
         sensor.AddObservation(rb.velocity.z);
     }
 
-    private float power = 45;
+    private float power = 50;
 
     public override void OnActionReceived(ActionBuffers actionBuffers)
     {
@@ -128,6 +131,7 @@ public class DroneAgent11 : Agent
         // Rewards
 
         step++;
+        total_step++;
         SetReward();
         
     }
@@ -163,39 +167,46 @@ public class DroneAgent11 : Agent
         {
             New_roll = roll;
         }
-        double GP = Gaussian(New_pitch, 0, 10) * 25;
-        double GR = Gaussian(New_roll, 0, 10) * 25;
-        double GD = Gaussian(dis, 0, 8) * 25;
+        double GP = (Gaussian(New_pitch, 0, 2)-1) * 2;
+        double GR = (Gaussian(New_roll, 0, 2)-1) * 2;
+        double GD = Gaussian(dis, 0, 8) * 100;
         AddReward((float)(GP + GR + (1.5 * GD)));
+        reward += (float)(GP + GR + (1.5 * GD));
         Debug.Log("GP:" + GP);
         Debug.Log("GR:" + GR);
         Debug.Log("GD:" + GD);
         Debug.Log("velocity:" + Rotor_bl.velocity);
-        AddReward(-3f);
+        AddReward(-1f);
+        reward -= 1;
 
         // 90~270도만큼 회전하면 음수 보상&종료
         if ((pitch > 90 && pitch < 270) || (roll > 90 && roll < 270))
         {
             SetReward(-1000f);
-            //logger.Log(episode, (float)New_pitch, (float)New_roll);
+            reward -= 1000;
+            //logger_epi.Log_epi(episode, (float)dis, (float)New_pitch, (float)New_roll, reward, 0);
             EndEpisode();
         }
         else if (Mathf.Abs(rb.transform.localPosition.x) > 10 || Mathf.Abs(rb.transform.localPosition.z) > 10)
         {
             SetReward(-1000f);
-            //logger.Log(episode, (float)New_pitch, (float)New_roll);
+            reward -= 1000;
+            //logger_epi.Log_epi(episode, (float)dis, (float)New_pitch, (float)New_roll, reward, 0);
             EndEpisode();
         }
         else if (step > 5000)
         {
             AddReward(-1000f);
-            //logger.Log(episode, (float)New_pitch, (float)New_roll);
+            reward -= 1000;
+            //logger_epi.Log_epi(episode, (float)dis, (float)New_pitch, (float)New_roll, reward, 0);
             EndEpisode();
         }
         var statsRecorder = Academy.Instance.StatsRecorder;
         statsRecorder.Add("Distance", dis, StatAggregationMethod.Average);
         statsRecorder.Add("Pitch", (float)New_pitch, StatAggregationMethod.Average);
         statsRecorder.Add("Roll", (float)New_roll, StatAggregationMethod.Average);
+        statsRecorder.Add("step",(float)step, StatAggregationMethod.Average);
+        //logger_step.Log_step(total_step, (float)dis, (float)New_pitch, (float)New_roll, reward);
     }
 
     static double Gaussian(double x, double mean, double standardDeviation)
@@ -240,6 +251,7 @@ public class DroneAgent11 : Agent
         {
             AddReward(1000f);
             Debug.Log("success");
+            //logger_epi.Log_epi(episode,(float)dis, (float)New_pitch, (float)New_roll,reward, 1);
             EndEpisode();
         }
     }
@@ -247,23 +259,41 @@ public class DroneAgent11 : Agent
 
 public class Logger
 {
-    private string filePath;
+    private string filePath_epi;
+    private string filePath_step;
 
-    public Logger(string filePath)
+    public Logger(string filePath_epi, string filePath_step)
     {
-        this.filePath = "C:/Users/leejehee/Desktop/Github/FindTarget/ml - agents/Project/Build/FindTarget/dronemodel";
-
-        using (var writer = new StreamWriter(filePath, append: true))
+        this.filePath_epi = filePath_epi;
+        this.filePath_step = filePath_step;
+        if(!File.Exists(filePath_epi)||new FileInfo(filePath_epi).Length==0)
         {
-            writer.WriteLine("Episode,Reward,AnotherMetric");
+            using (var writer1 = new StreamWriter(filePath_epi, append: true))
+            {
+                writer1.WriteLine("Episode,distance,New_pitch,New_roll,reward,success");
+            }
+        }
+        if (!File.Exists(filePath_step) || new FileInfo(filePath_step).Length == 0)
+        {
+            using (var writer2 = new StreamWriter(filePath_step, append: true))
+            {
+                writer2.WriteLine("Step,distance,New_pitch,New_roll,reward");
+            }
         }
     }
 
-    public void Log(int episode, float New_pitch, float New_roll)
+    public void Log_epi(int episode,float dis, float New_pitch, float New_roll, double reward, int success)
     {
-        using (var writer = new StreamWriter(filePath, append: true))
+        using (var writer = new StreamWriter(filePath_epi, append: true))
         {
-            writer.WriteLine($"{episode},{New_pitch},{New_roll}");
+            writer.WriteLine($"{episode},{dis},{New_pitch},{New_roll},{reward},{success}");
+        }
+    }
+    public void Log_step(int total_step, float dis, float New_pitch, float New_roll, double reward)
+    {
+        using (var writer = new StreamWriter(filePath_step, append: true))
+        {
+            writer.WriteLine($"{total_step},{dis},{New_pitch},{New_roll},{reward}");
         }
     }
 }
