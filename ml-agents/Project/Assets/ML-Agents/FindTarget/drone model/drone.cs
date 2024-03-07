@@ -28,9 +28,6 @@ public class DroneAgent : Agent
     private Quaternion initQuaternion;
 
     public double dis;
-    //public double pitch;
-    //public double roll;
-    //public double yaw;
     public double New_pitch;
     public double New_roll;
     public int episode = 0;
