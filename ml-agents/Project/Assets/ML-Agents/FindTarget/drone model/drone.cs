@@ -145,6 +145,7 @@ public class DroneAgent : Agent
         double pitch = currentRotation.x;
         double yaw = currentRotation.y;
         double roll = currentRotation.z;
+        double GP,GR,GD;
 
         double New_pitch = 0, New_roll = 0;
 
@@ -164,20 +165,29 @@ public class DroneAgent : Agent
         {
             New_roll = roll;
         }
-        double GP = (Gaussian(New_pitch, 0, 2) - 1) * 2;
-        double GR = (Gaussian(New_roll, 0, 2) - 1) * 2;
-        double GD = Gaussian(dis, 0, 8) * 100;
-        AddReward((float)(GP + GR + (1.5 * GD)));
-        reward += (float)(GP + GR + (1.5 * GD));
-        Debug.Log("GP:" + GP);
-        Debug.Log("GR:" + GR);
-        Debug.Log("GD:" + GD);
-        Debug.Log("velocity:" + Rotor_bl.velocity);
+        // rotation < 30이면 가우시안에 따름, >=30이면 -1
+        if (New_pitch < 30)
+        {
+            GP = (Gaussian(New_pitch, 0, 2) - 1) * 2;
+        }
+        else { GP = -1; }
+        if (New_roll < 30)
+        {
+            GR = (Gaussian(New_roll, 0, 2) - 1) * 2;
+        }
+        else { GR= -1; }
+
+        //GD = Gaussian(dis, 0, 8) * 100;
+        if(dis>0) { GD = -dis + 5; }
+        else { GD = dis+5; }
+
+        AddReward((float)(GP + GR + GD));
+        reward += (float)(GP + GR + GD);
         AddReward(-1f);
         reward -= 1;
 
         // 90~270도만큼 회전하면 음수 보상&종료
-        if ((pitch > 90 && pitch < 270) || (roll > 90 && roll < 270))
+        if (New_pitch>90 || New_roll>90)
         {
             SetReward(-1000f);
             reward -= 1000;
