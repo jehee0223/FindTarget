@@ -28,6 +28,7 @@ public class DroneAgent : Agent
     private Quaternion initQuaternion;
 
     public double dis;
+    public double fix_dis;
     public double New_pitch;
     public double New_roll;
     public int episode = 0;
@@ -59,7 +60,7 @@ public class DroneAgent : Agent
         // Move the target to a new spot
         rb.transform.localPosition = new Vector3(0, (float)0.4813456, 0);
         Target.transform.localPosition = new Vector3(UnityEngine.Random.Range(-5, 5), 9, UnityEngine.Random.Range(-5, 5));
-        //Target.transform.localPosition = new Vector3(3, 9, 3);
+        fix_dis = Vector3.Distance(Target.transform.localPosition, rb.transform.localPosition);
 
         reward = 0;
         episode += 1;
@@ -137,7 +138,7 @@ public class DroneAgent : Agent
     public void SetReward()
     {
         /*-----------------------------------Target 찾아가기-------------------------------*/
-        float dis = Vector3.Distance(Target.transform.localPosition, rb.transform.localPosition);
+        dis = Vector3.Distance(Target.transform.localPosition, rb.transform.localPosition);
         Debug.Log("Dis: " + dis);
         Vector3 currentRotation = rb.rotation.eulerAngles;
 
@@ -147,7 +148,8 @@ public class DroneAgent : Agent
         double roll = currentRotation.z;
         double GP,GR,GD;
 
-        double New_pitch = 0, New_roll = 0;
+        New_pitch = 0;
+        New_roll = 0;
 
         if (pitch > 180)
         {
@@ -168,23 +170,23 @@ public class DroneAgent : Agent
         // rotation < 30이면 가우시안에 따름, >=30이면 -1
         if (New_pitch < 30)
         {
-            GP = (Gaussian(New_pitch, 0, 2) - 1) * 2;
+            GP = Gaussian(New_pitch, 0, 17) * 43;
         }
         else { GP = -1; }
         if (New_roll < 30)
         {
-            GR = (Gaussian(New_roll, 0, 2) - 1) * 2;
+            GR = Gaussian(New_roll, 0, 2) * 43;
         }
         else { GR= -1; }
 
         //GD = Gaussian(dis, 0, 8) * 100;
-        if(dis>0) { GD = -dis + 5; }
-        else { GD = dis+5; }
+        if(dis>0) { GD = -(2/fix_dis*dis) + 2; }
+        else { GD = 2/fix_dis*dis+2; }
 
         AddReward((float)(GP + GR + GD));
         reward += (float)(GP + GR + GD);
-        AddReward(-1f);
-        reward -= 1;
+        AddReward(-0.1f);
+        reward -= 0.1;
 
         // 90~270도만큼 회전하면 음수 보상&종료
         if (New_pitch>90 || New_roll>90)
@@ -209,7 +211,7 @@ public class DroneAgent : Agent
             EndEpisode();
         }
         var statsRecorder = Academy.Instance.StatsRecorder;
-        statsRecorder.Add("Distance", dis, StatAggregationMethod.Average);
+        statsRecorder.Add("Distance", (float)dis, StatAggregationMethod.Average);
         statsRecorder.Add("Pitch", (float)New_pitch, StatAggregationMethod.Average);
         statsRecorder.Add("Roll", (float)New_roll, StatAggregationMethod.Average);
         statsRecorder.Add("step", (float)step, StatAggregationMethod.Average);
