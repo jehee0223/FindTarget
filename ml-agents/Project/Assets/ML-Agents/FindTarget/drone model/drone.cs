@@ -29,6 +29,8 @@ public class DroneAgent : Agent
 
     public double dis;
     public double fix_dis;
+    public double TGP,TGR,TGD;
+    double GP, GR, GD;
     public double New_pitch;
     public double New_roll;
     public int episode = 0;
@@ -41,7 +43,7 @@ public class DroneAgent : Agent
     public override void Initialize()
     {
         rb = GetComponent<Rigidbody>();
-        logger = new Logger("C:/Users/leejehee/Desktop/Github/FindTarget/ml-agents/Project/Build/FindTarget/dronemodel/log/epi/log_epi", "C:/Users/leejehee/Desktop/Github/FindTarget/ml-agents/Project/Build/FindTarget/dronemodel/log/step/log_step");
+        logger = new Logger("C:/Users/leejehee/Desktop/Github/FindTarget/ml-agents/Project/Build/FindTarget/dronemodel/log/drone13/log_epi", "C:/Users/leejehee/Desktop/Github/FindTarget/ml-agents/Project/Build/FindTarget/dronemodel/log/drone13/log_step");
     }
 
     public override void OnEpisodeBegin()
@@ -59,7 +61,8 @@ public class DroneAgent : Agent
 
         // Move the target to a new spot
         rb.transform.localPosition = new Vector3(0, (float)0.4813456, 0);
-        Target.transform.localPosition = new Vector3(UnityEngine.Random.Range(-5, 5), 9, UnityEngine.Random.Range(-5, 5));
+        //Target.transform.localPosition = new Vector3(UnityEngine.Random.Range(-5, 5), 9, UnityEngine.Random.Range(-5, 5));
+        Target.transform.localPosition = new Vector3(3, 9, 3);
         fix_dis = Vector3.Distance(Target.transform.localPosition, rb.transform.localPosition);
 
         reward = 0;
@@ -139,15 +142,13 @@ public class DroneAgent : Agent
     {
         /*-----------------------------------Target 찾아가기-------------------------------*/
         dis = Vector3.Distance(Target.transform.localPosition, rb.transform.localPosition);
-        Debug.Log("Dis: " + dis);
         Vector3 currentRotation = rb.rotation.eulerAngles;
 
         // 각 축의 회전 각도 출력
         double pitch = currentRotation.x;
         double yaw = currentRotation.y;
         double roll = currentRotation.z;
-        double GP,GR,GD;
-
+        
         New_pitch = 0;
         New_roll = 0;
 
@@ -170,21 +171,24 @@ public class DroneAgent : Agent
         // rotation < 30이면 가우시안에 따름, >=30이면 -1
         if (New_pitch < 30)
         {
-            GP = Gaussian(New_pitch, 0, 17) * 43;
+            GP = (Gaussian(New_pitch, 0, 17) * 43)-1;
         }
-        else { GP = -1; }
+        else { GP = -3; }
         if (New_roll < 30)
         {
-            GR = Gaussian(New_roll, 0, 2) * 43;
+            GR = (Gaussian(New_roll, 0, 17) * 43)-1;
         }
-        else { GR= -1; }
+        else { GR= -3; }
 
         //GD = Gaussian(dis, 0, 8) * 100;
-        if(dis>0) { GD = -(2/fix_dis*dis) + 2; }
-        else { GD = 2/fix_dis*dis+2; }
+        GD = -(4 / fix_dis * dis) + 4;
+        
 
         AddReward((float)(GP + GR + GD));
         reward += (float)(GP + GR + GD);
+        TGR += GR;
+        TGP += GP;
+        TGD += GD;
         AddReward(-0.1f);
         reward -= 0.1;
 
@@ -193,21 +197,21 @@ public class DroneAgent : Agent
         {
             SetReward(-1000f);
             reward -= 1000;
-            logger.Log_epi(episode, (float)dis, (float)New_pitch, (float)New_roll, reward, 0);
+            logger.Log_epi(episode, step, New_pitch, New_roll, TGP, TGR, TGD, reward, 0);
             EndEpisode();
         }
         else if (Mathf.Abs(rb.transform.localPosition.x) > 10 || Mathf.Abs(rb.transform.localPosition.z) > 10)
         {
             SetReward(-1000f);
             reward -= 1000;
-            logger.Log_epi(episode, (float)dis, (float)New_pitch, (float)New_roll, reward, 0);
+            logger.Log_epi(episode, step, New_pitch, New_roll, TGP, TGR, TGD, reward, 0);
             EndEpisode();
         }
         else if (step > 5000)
         {
             AddReward(-1000f);
             reward -= 1000;
-            logger.Log_epi(episode, (float)dis, (float)New_pitch, (float)New_roll, reward, 0);
+            logger.Log_epi(episode, step, New_pitch, New_roll, TGP, TGR, TGD, reward, 0);
             EndEpisode();
         }
         var statsRecorder = Academy.Instance.StatsRecorder;
@@ -215,7 +219,18 @@ public class DroneAgent : Agent
         statsRecorder.Add("Pitch", (float)New_pitch, StatAggregationMethod.Average);
         statsRecorder.Add("Roll", (float)New_roll, StatAggregationMethod.Average);
         statsRecorder.Add("step", (float)step, StatAggregationMethod.Average);
-        logger.Log_step(total_step, (float)dis, (float)New_pitch, (float)New_roll, reward);
+        //logger.Log_step(total_step, (float)dis, (float)New_pitch, (float)New_roll, reward);
+    }
+
+    public void OnCollisionEnter(Collision collision)
+    {
+        if (collision.gameObject.CompareTag("target"))
+        {
+            AddReward(1000f);
+            Debug.Log("success");
+            logger.Log_epi(episode, step, New_pitch, New_roll, TGP, TGR, TGD, reward, 1);
+            EndEpisode();
+        }
     }
 
     static double Gaussian(double x, double mean, double standardDeviation)
@@ -254,16 +269,7 @@ public class DroneAgent : Agent
         }
     }
 
-    public void OnCollisionEnter(Collision collision)
-    {
-        if (collision.gameObject.CompareTag("target"))
-        {
-            AddReward(1000f);
-            Debug.Log("success");
-            logger.Log_epi(episode, (float)dis, (float)New_pitch, (float)New_roll, reward, 1);
-            EndEpisode();
-        }
-    }
+    
 }
 
 public class Logger
@@ -290,8 +296,8 @@ public class Logger
         filePath_epi = $"{baseFilePath_epi}_{epiFileCount}.csv";
         filePath_step = $"{baseFilePath_step}_{stepFileCount}.csv";
         // 파일 초기화 및 헤더 작성
-        InitializeFile(filePath_epi, "Episode,distance,New_pitch,New_roll,reward,success");
-        InitializeFile(filePath_step, "Step,distance,New_pitch,New_roll,reward");
+        InitializeFile(filePath_epi, "Episode,Step,New_pitch,New_roll,GP+GR,GD,reward,success");
+        InitializeFile(filePath_step, "Step,success");
     }
 
     private void InitializeFile(string filePath, string header)
@@ -305,7 +311,7 @@ public class Logger
         }
     }
 
-    public void Log_epi(int episode, float dis, float New_pitch, float New_roll, double reward, int success)
+    public void Log_epi(int episode, int step, double New_pitch, double New_roll,double GP,double GR,double GD, double reward, int success)
     {
         if (epiLineCount >= maxLinesPerFile)
         {
@@ -315,7 +321,7 @@ public class Logger
         }
         using (var writer = new StreamWriter(filePath_epi, append: true))
         {
-            writer.WriteLine($"{episode},{dis},{New_pitch},{New_roll},{reward},{success}");
+            writer.WriteLine($"{episode},{step},{New_pitch},{New_roll},{GP+GR},{GD},{reward},{success}");
             epiLineCount++; // 라인 카운트 증가
         }
     }
