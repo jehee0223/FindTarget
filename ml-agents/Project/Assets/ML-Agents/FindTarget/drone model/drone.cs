@@ -49,6 +49,11 @@ public class DroneAgent : Agent
     public override void OnEpisodeBegin()
     {
         step = 0;
+        TGP = 0;
+        TGR = 0;
+        TGD = 0;
+        New_pitch = 0;
+        New_roll = 0;
 
         rb.transform.localPosition = initPosition;
         rb.transform.localRotation = initQuaternion;
@@ -173,12 +178,12 @@ public class DroneAgent : Agent
         {
             GP = (Gaussian(New_pitch, 0, 17) * 43)-1;
         }
-        else { GP = -3; }
+        else { GP = -4; }
         if (New_roll < 30)
         {
             GR = (Gaussian(New_roll, 0, 17) * 43)-1;
         }
-        else { GR= -3; }
+        else { GR= -4; }
 
         //GD = Gaussian(dis, 0, 8) * 100;
         GD = -(4 / fix_dis * dis) + 4;
