@@ -7,8 +7,11 @@ using Unity.MLAgents.Actuators;
 using System;
 using System.IO;
 using static UnityEngine.UIElements.UxmlAttributeDescription;
+using Unity.MLAgents.Policies;
+
 //using UnityEditor.PackageManager;
 //using UnityEditor.SearchService;
+
 
 public class DroneAgent : Agent
 {
@@ -38,11 +41,17 @@ public class DroneAgent : Agent
     public Logger logger_epi;
     public Logger logger_step;
     public Logger logger;
+    public Vector3 rb_vector;
+    public Transform rb_transform;
+    public Vector3 previousPosition = new Vector3(0, 0, 0);
+    public Vector3 currentPosition = new Vector3(0, 0, 0);
 
-    // Start is called before the first frame update
     public override void Initialize()
     {
+        //rb 객체 선언
         rb = GetComponent<Rigidbody>();
+        //agent의 transform 컴포넌트 가져오기
+        rb_transform=rb.GetComponent<Transform>();
         logger = new Logger("C:/Users/leejehee/Desktop/Github/FindTarget/ml-agents/Project/Build/FindTarget/dronemodel/log/drone13/log_epi", "C:/Users/leejehee/Desktop/Github/FindTarget/ml-agents/Project/Build/FindTarget/dronemodel/log/drone13/log_step");
     }
 
@@ -64,7 +73,6 @@ public class DroneAgent : Agent
         Rotor_bl.velocity = Vector3.zero;
         rb.velocity = Vector3.zero;
 
-        // Move the target to a new spot
         rb.transform.localPosition = new Vector3(0, (float)0.4813456, 0);
         //Target.transform.localPosition = new Vector3(UnityEngine.Random.Range(-5, 5), 9, UnityEngine.Random.Range(-5, 5));
         Target.transform.localPosition = new Vector3(3, 9, 3);
@@ -77,16 +85,14 @@ public class DroneAgent : Agent
 
     public override void CollectObservations(VectorSensor sensor)
     {
-        //Debug.Log("CollectObservations");
-        // Target and Agent positions
         sensor.AddObservation(Target.localPosition);
         sensor.AddObservation(rb.transform.localPosition);
         sensor.AddObservation(rb.transform.localRotation);
 
-        // Agent velocity
         sensor.AddObservation(rb.velocity.x);
         sensor.AddObservation(rb.velocity.y);
         sensor.AddObservation(rb.velocity.z);
+
     }
 
     private float power = 50;
@@ -95,13 +101,9 @@ public class DroneAgent : Agent
     {
         Vector3 currentRotation = rb.rotation.eulerAngles;
 
-        // 각 축의 회전 각도 출력
         float pitch = currentRotation.x;
         float yaw = currentRotation.y;
         float roll = currentRotation.z;
-        // 회전 각도 출력 예시
-        //Debug.Log("Pitch: " + pitch + ", Yaw: " + yaw + ", Roll: " + roll);
-
 
         var continuousActions = actionBuffers.ContinuousActions;
         if (continuousActions.Length >= 4)
@@ -115,26 +117,22 @@ public class DroneAgent : Agent
                 {
                     case 0:
                         Rotor_fr.AddRelativeForce(Vector3.up * (action + 1f) * power);
-                        //Debug.Log("fr action: " + action + " fr force: " + Vector3.up * (action + 1f) * power);
                         break;
                     case 1:
                         Rotor_fl.AddRelativeForce(Vector3.up * (action + 1f) * power);
-                        //Debug.Log("fl action: " + action + " fl force: " + Vector3.up * (action + 1f) * power);
                         break;
                     case 2:
                         Rotor_br.AddRelativeForce(Vector3.up * (action + 1f) * power);
-                        //Debug.Log("br action: " + action + " br force: " + Vector3.up * (action + 1f) * power);
                         break;
                     case 3:
                         Rotor_bl.AddRelativeForce(Vector3.up * (action + 1f) * power);
-                        //Debug.Log("bl action: " + action + " bl force: " + Vector3.up * (action + 1f) * power);
                         break;
-                        // Add more cases if needed
                 }
             }
         }
-        // Actions, size = 4
-        // Rewards
+
+        Vector3 previousPosition= rb.position;
+        Vector3 currentPosition= rb.position;
 
         step++;
         total_step++;
@@ -145,17 +143,35 @@ public class DroneAgent : Agent
 
     public void SetReward()
     {
-        /*-----------------------------------Target 찾아가기-------------------------------*/
         dis = Vector3.Distance(Target.transform.localPosition, rb.transform.localPosition);
         Vector3 currentRotation = rb.rotation.eulerAngles;
 
-        // 각 축의 회전 각도 출력
         double pitch = currentRotation.x;
         double yaw = currentRotation.y;
         double roll = currentRotation.z;
         
         New_pitch = 0;
         New_roll = 0;
+
+        //현재 agent위치 받음
+        currentPosition = rb.transform.localPosition;
+        Debug.Log("C:" + currentPosition + " P:" + previousPosition);
+        //agent와 target vector 찾기
+        Vector3 goalvector=(Target.transform.localPosition-rb.transform.localPosition).normalized;
+        Debug.Log("goalvector:" + goalvector);
+        //현재 agent vector 찾기
+        Vector3 rb_vector = (currentPosition - previousPosition).normalized;
+        Debug.Log("rb_vector:" + rb_vector);
+        //현재 위치를 이전 위치로 갱신
+        previousPosition = currentPosition;
+
+        // 두 백터 사이 각도를 줄어드는 방향으로 코드 짜기
+        Vector3 angle = Quaternion.FromToRotation( goalvector ,rb_vector).eulerAngles;
+        if (angle.x > 180) { angle.x = 360 - angle.x; }
+        if (angle.y > 180) { angle.y = 360 - angle.y; }
+        if (angle.z > 180) { angle.z = 360 - angle.z; }
+        float vector_aver=(angle.x+angle.y+angle.z)/300;
+        Debug.Log("vector_aver:" + vector_aver);
 
         if (pitch > 180)
         {
