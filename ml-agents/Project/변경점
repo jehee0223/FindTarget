@@ -1,0 +1,165 @@
+dronetest1
+범위 호버링시 +(7-distance)
+
+dronetest2
+범위 호버링시 +(7-distance)
+15도 이하 +1
+15도 이상 -1
+
+dronetest3
+범위 호버링시 +(7-distance)
+10도 이하 +1
+10도 이상 -1
+
+dronetest4
+범위 호버링시 +(7-distance)
+5도 이하 +1
+
+# 가끔 하늘 위로 솟음 뭐지(아마 빠르게 distance에 대한 보상을 얻고싶어서 그러는듯)
+
+계속 음수 보상 쪽으로 향함. 따라서 바닥 범위를 정함
+범위 벗어나면 -10 & end epi ( 이거 추가하면 아예 뜨지를 않음 왜지? 나중에 고쳐보기)
+
+
+step수 5000 이상 -> end epi
+-------------------------------
+
+dronetest5(예정)
+범위 호버링시 +(7-distance)
+5도 이하 +1
+++ if 30도보다 커지면 end epi
+
+첨부터 다시(지금까지 각 로터의 힘이 -0.5f ~ 1.5f였음)
+drone2
+power 10
+10도 이하 +1
+
+drone3
+power 10
+10도 이하 +10
+
+drone4
+power 10
+5도 이하 +10
+
+drone5
+target 추가
+power 10
+10도 이하 AddReward(0.1f * (10 - dis));
+
+drone6
+target 추가
+power 10
+20도 이하 AddReward(0.1f * (10 - dis));
+
+drone7
+target 추가
+power 10
+30도 이하 AddReward(0.1f * (10 - dis));
+
+drone8
+target 추가
+power 20 -> 위로는 가지만 좌우 이동이 안되는 경우가 있음 이를 보안해보고자 높임
+30도 이하 AddReward(0.1f * (10 - dis));
+
+drone9
+target 추가
+power 10 ->
+30도 이하 AddReward(0.1f * (10 - dis));
+날개 회전 추가해봄(test용도)
+
+test_nonmoter
+0이 젤 좋으니 0을 평균으로 분산을 1로하는 가우시안 분포로 보상 주는것(중요)
+
+drone10
+target 고정
+power 50
+pitch, roll, distance에 대해 가우시안으로 보상을 줌
+GP = Gaussian(New_pitch, 0, 10) * 25;
+GR = Gaussian(New_roll, 0, 10) * 25;
+GD = Gaussian(dis, 0, 8) * 25;
+AddReward((float)(GP+GR+(1.5*GD)));
+
+drone11
+double GP = (Gaussian(New_pitch, 0, 2) - 1)*2;
+double GR = (Gaussian(New_roll, 0, 2) - 1)*2;
+double GD = Gaussian(dis, 0, 8) * 100;
+AddReward((float)(GP + GR + (1.5 * GD)));
+AddReward(-1f);
+GP, GR의 각도가 틀어지면 음수보상, 각도가 0일때 GP,GR = 0.997 / 15도 틀어지면 GP,GR = 0.33 (각 -1을 부여)*2
+*25 -> *10로 임의 변경(*25하면 넘어지기만 함)
+GD *25 -> 50
+step당 -3 -> -1
+
+
+--------------------------------------
+mean=0 , std=17
+rot : 0~30 -> GP,GR : 0.023467 ~ 0.004945 *86 = 2.01~0.42
+
+초기 dis : 9~11.45 -> GD : 1 ~ -1.45
+GD : 10 ~ -무한대
+
+drone 12
+// rotation < 30이면 가우시안에 따름, >=30이면 -1
+GP = Gaussian(New_pitch, 0, 17) * 43;
+GR = Gaussian(New_roll, 0, 2) * 43;
+else { GP,GR = -1 }
+
+if(dis>0) { GD = -(2/fix_dis*dis) + 2; }
+else { GD = 4/fix_dis*dis+4; }
+
+drone13
+rot: -0.9787365 ~ 0.009081 else -3
+GD: 4 ~ -무한대
+target고정 -> 학습이 잘 되었는지 지표확인을 위함 & GP,GR,GD의 비율 & 몇 step만에 도달하는지
+step마다 -0.1
+
+drone14
+방향 vector추가(agent의 vector와 실제 정답agent2target vector) 각도차 : 0~360(degree)
+N_angle = Gaussian(angle, 0, 7)*50+1;
+angle -> N_angle
+0 -> 2.84958
+10 -> 1.02712
+20 -> 0.0481
+reward=GP+GR+GD+N_angle
+step마다 -0.1
+floar마다 -0.2
+max_step : 500만
+
+drone14_1
+double N_angle = -angle / 360 + 2;
+reward=GP+GR+(GD*N_angle)
+
+------------------------------------------------
+drone15
+기존 코드에서 GY(yaw)추가 -> 방향 제어 기능
+드론의 위치를 기준으로 좌표계 설정 -> target위치는 드론의 위치에 따라서 상대적인 좌표값으로 변환
+target vector는 거리vector & 방향vector
+따라서 기존 drone2target과 현재 drone vector 차를 구하는 식 삭제
+Reward = GP + GR + ( GD * GY )
+GY : 2 - Abs(targetposition정규화한 x) -> 범위( 1 ~ 2 )
+
+
+drone16
+GP,GR -> 음수 보상 삭제
+(자세를 통해 타겟을 향해 가는데 자세에 대해 음수 보상을 주면 결국 상쇄됨)
+GD, N_angle에 대해서만 시도
+
+dronetargets1 - (target2개)
+GP,GR -> 음수 보상 삭제
+(자세를 통해 타겟을 향해 가는데 자세에 대해 음수 보상을 주면 결국 상쇄됨)
+GD, N_angle에 대해서만 시도
+행동 -25~75
+
+dronetarget2
+행동 0~50으로 변경
+drone 무게 7
+layer갯수 2 -> 3
+종료 조건 : pitch, roll > 70 종료
+N_angle : 1 ~ 2
+reward = GD * N_angle
+step : -0.3
+
+--------------------------------------------------------------------------
+reset!!!!!!!!!!!!!!
+
